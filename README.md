@@ -9,3 +9,6 @@
 * Set **debug=False** in production
 * Once the app is running access the app using the following REST APIs
      * http://[ip or hostname]:5000/fibonacci/get/[num]
+
+This App can be extended to more features by using specific class handlers for each task or if the functionality is too complex Django will be better suited in future.
+I have run sample benchmarks for 100000 requests and 10 concurrent connections. This looks good. But Production is a different story where we need to perform load balancing to handle heavy requests.
