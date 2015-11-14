@@ -1,15 +1,17 @@
 # fibonacci-rest-app
 * To set up app clone the project
-* Install flask **sudo pip install flask-restful**
+* Install dependencies **pip install -r requirements.txt**
+* Amend configurations if necessary at config.yaml
 * Run the application using **python app.py**
 * Run individual test files test.py and func_test.py or use **python -m unittest discover**
 
 **USAGE**
 * By default the app runs on 5000
-* Set **debug=False** in production
+* Set **debug=False** in production (done via config.yaml)
 * Once the app is running access the app using the following REST APIs
-     * http://[ip or hostname]:5000/fibonacci/get/[num]
+     * http://[ip or hostname]:[port]/v1/fibonacci/get/[num]
 
+NOTE:
 This App can be extended to more features by using specific class handlers for each task or if the functionality is too complex Django will be better suited in future.
 I have run sample benchmarks for 100000 requests and 10 concurrent connections. This looks good. But Production is a different story where we need to perform load balancing to handle heavy requests.
 
