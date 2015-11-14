@@ -1,50 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*
 from flask import Flask
 from flask_restful import Resource, Api
-#Fibo(number of elements)
-#Gives the list of fibonacci series fitting the range as output
-def fibo(n):
-  list1=[]
-  if n==0:
-    return list1
-  list1.append(0)
-  f1,f2 = 0,1
-  for i in range(n-1):
-    f1,f2 = f2,f1+f2
-    list1.append(f1)
-  return list1
-
+from fibonacci import Fibonacci
+import helper as helper
+import os
 #App Initialization
 app = Flask(__name__)
 api = Api(app)
-
+config =None
+cachelist= None
 #handler for default page
-class HelloWorld(Resource):
+class LandingPage(Resource):
     def get(self):
-        return {'message': 'Welcome! You have reached the default page'}
+        return {config['DEFAULT_TITLE']: config['DEFAULT_MESSAGE']}
 
 #Handler for fibonacci/get/<num>
-class FibonacciGet(Resource):
+class FibonacciGetWithParam(Resource):
     def get(self, num):
         if num.isnumeric():          
-          num = int(num)
-          if num < 0:
-            return {'Exception' : 'please enter positive values' }
-          else :
-            return {'fibonacci':fibo(num) }
+            num = int(num)
+            if num > config['CACHING_UPPER_LIMIT']:
+              return helper.handle_invalid_usage(config['CACHE_LIMIT_EXCEEDED_ERROR'],config['CACHE_LIMIT_EXCEEDED_CODE'],config)
+            elif num < 0:
+              return helper.handle_invalid_usage(config['NEGATIVE_VALUE_ERROR'],config['NEGATIVE_CODE'],config)
+            elif config['CACHE_ENABLE'] and num > config['LOWER_LIMIT_FOR_CACHING']:
+              cachelist =os.listdir(config['CACHE_DIRECTORY'])
+              if len(cachelist) > 0:
+                #elif num < max(cachelist):
+                if num in cachelist :
+                   res = Fibonacci().fibofetchFromCache(num,num)
+                   return helper.handle_success(res,config['SUCCESS_CODE'],config)
+                else:
+                   templist=map(int,cachelist)
+                   templist.append(num)
+                   templist.sort()
+                   ifound= templist.index(num)
+                   if ifound+1 < len(templist):
+                      idealCacheFile=templist[ifound+1]
+                      res = Fibonacci().fibofetchFromCache(num,idealCacheFile)
+                      return helper.handle_success(res,config['SUCCESS_CODE'],config) 
+                   else:
+                      idealCacheFile=None
+                      res = Fibonacci().fiboGen(num)
+                      return helper.handle_success(res,config['SUCCESS_CODE'],config) 
+              else:
+                   res = Fibonacci().fiboGen(num)
+                   return helper.handle_success(res,config['SUCCESS_CODE'],config)
+            else:
+              print "caching not necessary"
+              res = Fibonacci().fiboGen(num)
+              return helper.handle_success(res,config['SUCCESS_CODE'],config)
         else:
-          return {'Exception' : 'Please enter positive numeric values' }
+          return helper.handle_invalid_usage(config['NEGATIVE_VALUE_ERROR'],config['NEGATIVE_CODE'],config )
 
 #handler for fibonacci/get
-class FibonacciHandler(Resource):
+class FibonacciGetWithoutParam(Resource):
      def get(self):
-        return {'Exception' : 'Enter any numeric value to get desired result' }
+        return helper.handle_invalid_usage(config['NUMERIC_ONLY_ERROR'],config['NEGATIVE_CODE'],config)
 
-#Routing for respective resources
-api.add_resource(HelloWorld, '/')
-api.add_resource(FibonacciGet, '/fibonacci/get/<string:num>')
-api.add_resource(FibonacciHandler, '/fibonacci/get/')
-
-#start the app
-#set debug=False for Production
+#set debug=False  in config.yaml for Production
 if __name__ == '__main__':
-    app.run(debug=True)
+    config= helper.getConfig()
+    api.add_resource(LandingPage, '/')
+    api.add_resource(FibonacciGetWithParam, '/{0}/{1}/<string:num>'.format(config["API_VERSION"],config["API_ENDPOINT"]))
+    api.add_resource(FibonacciGetWithoutParam, '/{0}/{1}/'.format(config['API_VERSION'],config['API_ENDPOINT']))
+    app.run(host=config["HOST"],port=config["PORT"],debug=config['DEBUG'])

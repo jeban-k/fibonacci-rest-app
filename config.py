@@ -1,0 +1,11 @@
+HOST="0.0.0.0"
+PORT=8000
+API_VERSION="v1"
+API_ENDPOINT="fibonacci/get"
+DEBUG=True
+NEGATIVE_VALUE_ERROR="Please enter Positive integer values to get desired output"
+DEFAULT_TITLE="Message"
+DEFAULT_MESSAGE="Welcome! You have reached the default page"
+EXCEPTION_TITLE="Exception"
+NEGATIVE_CODE=301
+SUCCESS=200
